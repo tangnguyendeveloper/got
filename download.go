@@ -438,6 +438,10 @@ func (d *Download) DownloadChunk(c *Chunk, dest io.Writer) error {
 	for index := 0; index < 10000; index++ {
 		log.Printf("error %v. retry %v/10000", err, index+1)
 		err = d.do_DownloadChunk(c, dest, &retry)
+		if err != nil {
+			log.Printf("Sleep 5s before retry")
+			time.Sleep(5 * time.Second)
+		}
 		if err == nil {
 			break
 		}
