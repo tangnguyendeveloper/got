@@ -21,9 +21,23 @@ I have changed some variables to suit my work. this repository was created by re
 #### Build this repository for Linux
 ```
 
+git clone https://github.com/tangnguyendeveloper/got.git
+
 cd /root/got/cmd/got
 
 go build -o got main.go variables_unix.go
+
+
+```
+
+#### Build this repository for Windows
+```
+
+git clone https://github.com/tangnguyendeveloper/got.git
+
+cd /root/got/cmd/got
+
+go build -o got.exe main.go variables_windows.go
 
 
 ```
