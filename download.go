@@ -438,17 +438,21 @@ func (d *Download) DownloadChunk(c *Chunk, dest io.Writer) error {
 	}
 	
 	index := 0
-	minSleep := 10
-	maxSleep := 60
+	minSleep := 1
+	maxSleep := 30
 	sleepTime := 0
 
 	for {
-		log.Printf("error %v. retry %v for chunk %v", err, index+1, *c )
+		if err != io.EOF {
+			log.Printf("error %v. retry %v for chunk %v", err, index+1, *c )
+		}
+		
 		err = d.do_DownloadChunk(c, dest, &retry)
+
 		if err != nil {
 			sleepTime = rand.Intn(maxSleep-minSleep+1) + minSleep
 			log.Printf("Sleep %ds before retry", sleepTime)
-			time.Sleep(15 * time.Second)
+			time.Sleep(time.Duration(int64(sleepTime)) * time.Second)
 		}
 		if err == nil {
 			break
@@ -468,6 +472,8 @@ func (d *Download) do_DownloadChunk(c *Chunk, dest io.Writer, retry * bool) erro
 	///adde by simon
 	*retry = false
 	///end of added
+
+	log.Printf("Chunk Seek to %v", *c)
 
 	if req, err = NewRequest(d.ctx, "GET", d.URL, d.Header); err != nil {
 		return err
@@ -495,7 +501,10 @@ func (d *Download) do_DownloadChunk(c *Chunk, dest io.Writer, retry * bool) erro
 	///replaced by simon wu
 	var written_size int64
 	written_size, err = io.CopyN(dest, io.TeeReader(res.Body, d), res.ContentLength)
-	if err != nil {
+	if err == io.EOF && written_size < res.ContentLength {
+		*retry = true
+		c.Start = c.Start + uint64(written_size)
+	} else if err != nil {
 		log.Printf("copy error: %v, size:%v, content-length:%v", err, written_size, res.ContentLength)
 		*retry = true
 		target_dest := dest.(*OffsetWriter);
