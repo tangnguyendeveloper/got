@@ -14,12 +14,18 @@ import (
 	"sync/atomic"
 	"time"
 	"math/rand"
+	"errors"
 )
 
 ///added by simon wu
 import "log"
 import "github.com/hashicorp/go-retryablehttp"
 ///end of added
+
+// unexpected EOF error
+var Unexpected_EOF error = errors.New("unexpected EOF")
+
+
 type (
 
 	// Info holds downloadable file info.
@@ -443,7 +449,7 @@ func (d *Download) DownloadChunk(c *Chunk, dest io.Writer) error {
 	sleepTime := 0
 
 	for {
-		if err != io.EOF {
+		if err != Unexpected_EOF {
 			log.Printf("error %v. retry %v for chunk %v", err, index+1, *c )
 		}
 		
@@ -501,7 +507,7 @@ func (d *Download) do_DownloadChunk(c *Chunk, dest io.Writer, retry * bool) erro
 	///replaced by simon wu
 	var written_size int64
 	written_size, err = io.CopyN(dest, io.TeeReader(res.Body, d), res.ContentLength)
-	if err == io.EOF && written_size < res.ContentLength {
+	if err == Unexpected_EOF && written_size < res.ContentLength {
 		*retry = true
 		c.Start = c.Start + uint64(written_size)
 	} else if err != nil {
