@@ -18,7 +18,7 @@ type Got struct {
 }
 
 // UserAgent is the default Got user agent to send http requests.
-var UserAgent = "TangNTDev/"
+var UserAgent = "GOT"
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
 // ErrDownloadAborted - When download is aborted by the OS before it is completed, ErrDownloadAborted will be triggered
@@ -95,7 +95,7 @@ func NewRequest(ctx context.Context, method, URL string, header []GotHeader) (re
 		return
 	}
 
-	userID := UserAgent + generateRandomString(10)
+	userID := generateRandomString(5) + UserAgent + generateRandomString(5)
 
 	req.Header.Set("User-Agent", userID)
 

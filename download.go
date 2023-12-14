@@ -13,6 +13,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+	"math/rand"
 )
 
 ///added by simon wu
@@ -135,10 +136,10 @@ func (d *Download) Init() (err error) {
 	// Set default client.
 	if d.Client == nil {
 ///replaced by simon wu
-		log.Printf("start download... RetryMax =  %d", 10000)
+		log.Printf("start download... RetryMax =  %d", 30000)
 		retryClient := retryablehttp.NewClient()
 		retryClient.Logger = nil
-		retryClient.RetryMax = 10000 // 10
+		retryClient.RetryMax = 30000 // 10
 		d.Client = retryClient.StandardClient()
 ///origin datas
 		// d.Client = DefaultClient
@@ -435,16 +436,24 @@ func (d *Download) DownloadChunk(c *Chunk, dest io.Writer) error {
 	if !retry {
 		return err
 	}
-	for index := 0; index < 10000; index++ {
-		log.Printf("error %v. retry %v/10000", err, index+1)
+	
+	index := 0
+	minSleep := 10
+	maxSleep := 60
+	sleepTime := 0
+
+	for {
+		log.Printf("error %v. retry %v for chunk %v", err, index+1, *c )
 		err = d.do_DownloadChunk(c, dest, &retry)
 		if err != nil {
-			log.Printf("Sleep 5s before retry")
-			time.Sleep(5 * time.Second)
+			sleepTime = rand.Intn(maxSleep-minSleep+1) + minSleep
+			log.Printf("Sleep %ds before retry", sleepTime)
+			time.Sleep(15 * time.Second)
 		}
 		if err == nil {
 			break
 		}
+		index = index + 1
 	}
 	return err
 }
