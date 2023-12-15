@@ -14,16 +14,12 @@ import (
 	"sync/atomic"
 	"time"
 	"math/rand"
-	"errors"
 )
 
 ///added by simon wu
 import "log"
 import "github.com/hashicorp/go-retryablehttp"
 ///end of added
-
-// unexpected EOF error
-var Unexpected_EOF error = errors.New("unexpected EOF")
 
 
 type (
@@ -449,9 +445,7 @@ func (d *Download) DownloadChunk(c *Chunk, dest io.Writer) error {
 	sleepTime := 0
 
 	for {
-		if err != Unexpected_EOF {
-			log.Printf("error %v. retry %v for chunk %v", err, index+1, *c )
-		}
+		log.Printf("warning %v. retry %v for chunk %v", err, index+1, *c )
 		
 		err = d.do_DownloadChunk(c, dest, &retry)
 
@@ -507,10 +501,10 @@ func (d *Download) do_DownloadChunk(c *Chunk, dest io.Writer, retry * bool) erro
 	///replaced by simon wu
 	var written_size int64
 	written_size, err = io.CopyN(dest, io.TeeReader(res.Body, d), res.ContentLength)
-	if err == Unexpected_EOF && written_size < res.ContentLength {
+	if err != nil && written_size < res.ContentLength {
 		*retry = true
 		c.Start = c.Start + uint64(written_size)
-	} else if err != nil {
+	} else if err != nil  {
 		log.Printf("copy error: %v, size:%v, content-length:%v", err, written_size, res.ContentLength)
 		*retry = true
 		target_dest := dest.(*OffsetWriter);
